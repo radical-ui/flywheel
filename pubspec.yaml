@@ -1,0 +1,9 @@
+name: _
+publish_to: none
+
+environment:
+  sdk: ^3.5.3
+
+workspace:
+  - controller
+  - objects
