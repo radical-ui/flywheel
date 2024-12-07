@@ -22,8 +22,13 @@ type ClassField struct {
 	TypeName    string
 }
 
-func (self *DartDoc) GetObjects() ([]string, error) {
-	var objects []string
+type DartObject struct {
+	Name string
+	File string
+}
+
+func (self *DartDoc) GetObjects() ([]DartObject, error) {
+	var objects []DartObject
 
 	for _, node := range self.nodes {
 		if node.Kind != nodeKindClass {
@@ -40,7 +45,7 @@ func (self *DartDoc) GetObjects() ([]string, error) {
 
 		for _, class := range docHtml.GetBaseClasses() {
 			if class == "Widget" {
-				objects = append(objects, node.Name)
+				objects = append(objects, DartObject{node.Name, node.EnclosedBy.Name + ".dart"})
 				break
 			}
 		}

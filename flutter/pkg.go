@@ -11,20 +11,25 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/radical-ui/flywheel/dart_doc"
+	"github.com/radical-ui/flywheel/dart_lib"
 	"github.com/radical-ui/flywheel/helpers"
 )
 
 type Options struct {
 	BundleIdentifier string
 	DisplayName      string
+	Url              string
 }
 
 type Flutter struct {
 	options Options
 	dir     string
+	dartLib *dart_lib.DartLib
+	dartDoc *dart_doc.DartDoc
 }
 
-func NewFlutter(options Options) (*Flutter, error) {
+func NewFlutter(dartLib *dart_lib.DartLib, dartDoc *dart_doc.DartDoc, options Options) (*Flutter, error) {
 	home, ok := os.LookupEnv("HOME")
 	if !ok {
 		return nil, fmt.Errorf("failed to detect user home")
@@ -52,7 +57,7 @@ func NewFlutter(options Options) (*Flutter, error) {
 		}
 	}
 
-	return &Flutter{options, appCacheDir}, nil
+	return &Flutter{options, appCacheDir, dartLib, dartDoc}, nil
 }
 
 func createFlutterApp(appsCacheDir string, folderName string, org string, name string) error {
