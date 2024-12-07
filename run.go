@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/radical-ui/flywheel/dart_doc"
 	"github.com/radical-ui/flywheel/dart_lib"
@@ -16,6 +19,8 @@ type runOptions struct {
 }
 
 func run(options runOptions) error {
+	ctx := contextWithCliCancelation()
+
 	dartLib, err := dart_lib.NewDartLib()
 	if err != nil {
 		return err
@@ -56,7 +61,7 @@ func run(options runOptions) error {
 	}
 
 	if options.preview {
-		if err := flutterInstance.Preview(); err != nil {
+		if err := flutterInstance.Preview(ctx); err != nil {
 			return err
 		}
 	}
@@ -72,4 +77,19 @@ func runWithErrorHandling(logFile string, options runOptions) {
 	if err := run(options); err != nil {
 		fmt.Println(err)
 	}
+}
+
+func contextWithCliCancelation() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	signalChan := make(chan os.Signal, 3)
+
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signalChan
+
+		cancel()
+	}()
+
+	return ctx
 }
