@@ -12,5 +12,7 @@ func (self *Flutter) Preview() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 
+	// TODO send sigint when CLI gets SIGINT
+
 	return cmd.Run()
 }

@@ -10,8 +10,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/radical-ui/flywheel/helpers"
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/radical-ui/flywheel/helpers"
 )
 
 type Options struct {

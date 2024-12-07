@@ -9,8 +9,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/radical-ui/flywheel/helpers"
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/radical-ui/flywheel/dart_lib"
+	"github.com/radical-ui/flywheel/helpers"
 )
 
 var nodeKindMethod = 10
@@ -38,8 +39,8 @@ type DartDoc struct {
 	nodes  []docNode
 }
 
-func NewDartDoc(dartPath string) (*DartDoc, error) {
-	objectsPath := path.Join(dartPath, "objects")
+func NewDartDoc(dartLib *dart_lib.DartLib) (*DartDoc, error) {
+	objectsPath := dartLib.ObjectsPath()
 
 	libLastModifiedAt, err := helpers.GetLatestModifiedTime(path.Join(objectsPath, "lib"))
 	if err != nil {

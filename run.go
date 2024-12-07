@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/radical-ui/flywheel/dart_doc"
+	"github.com/radical-ui/flywheel/dart_lib"
 	"github.com/radical-ui/flywheel/flutter"
 )
 
@@ -15,7 +16,7 @@ type runOptions struct {
 }
 
 func run(options runOptions) error {
-	dartLib, err := getDartLib()
+	dartLib, err := dart_lib.NewDartLib()
 	if err != nil {
 		return err
 	}
@@ -44,6 +45,10 @@ func run(options runOptions) error {
 	if options.genFlutter != nil {
 		f, err := flutter.NewFlutter(*options.genFlutter)
 		if err != nil {
+			return err
+		}
+
+		if err := f.Configure(dartLib); err != nil {
 			return err
 		}
 
