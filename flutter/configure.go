@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/radical-ui/flywheel/dart_lib"
@@ -20,13 +21,15 @@ func (self *Flutter) Configure(dartLib *dart_lib.DartLib) error {
 
 func makePubspecUpdater(dartLib *dart_lib.DartLib) func(string) string {
 	return func(text string) string {
-		newDependencies := fmt.Sprintf(
-			"dependencies:\n%s%s",
+		newDependencies := strings.Join([]string{
+			"dependencies:",
 			pathDependency("controller", dartLib.ControllerPath()),
 			pathDependency("objects", dartLib.ObjectsPath()),
-		)
+			"  flutter:\n    sdk: flutter",
+		}, "\n")
 
-		return strings.Replace(text, "dependencies:\n", newDependencies, 1)
+		currentDependenciesMatcher := regexp.MustCompile(`dependencies:[\S\s]*sdk: flutter`)
+		return currentDependenciesMatcher.ReplaceAllString(text, newDependencies)
 	}
 }
 
