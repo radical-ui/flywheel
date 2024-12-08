@@ -2,7 +2,7 @@ final typeKey = "\$";
 
 abstract class DownstreamMessage {}
 
-DownstreamMessage parseDownstreamMessage(Map<String, dynamic> json) {
+DownstreamMessage deserializeDownstreamMessage(Map<String, dynamic> json) {
   if (!json.containsKey(typeKey) || json[typeKey] is! String) {
     throw FormatException("Missing or invalid 'type' field in JSON: $json");
   }

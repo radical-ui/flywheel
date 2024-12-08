@@ -103,7 +103,15 @@ class Bridge {
     try {
       await _webSocket?.ready;
     } catch (error) {
-      Logger.instance.warn("websocket error: $error");
+      var message = error.toString();
+
+      if (error is WebSocketChannelException) {
+        // hsp (probably a bug in dart)... if you don't cast to dynamic, it will just say "Instance of 'WebSocketException'"
+        message = (error.inner as dynamic).message;
+      }
+
+      Logger.instance
+          .warn("websocket error during initial connection: $message");
       _queueRetry();
 
       return;
@@ -116,7 +124,8 @@ class Bridge {
       (data) => _handleIncomingMessages(data),
       onDone: _queueRetry,
       onError: (error) {
-        Logger.instance.warn("websocket error: $error");
+        Logger.instance
+            .warn("websocket error after connection was established: $error");
         _queueRetry();
       },
     );
@@ -124,11 +133,8 @@ class Bridge {
 
   void _handleIncomingMessages(String data) {
     try {
-      final List<dynamic> messages = _jsonCodec.decode(data) as List<dynamic>;
-      for (var message in messages) {
-        final parsedMessage = parseDownstreamMessage(message);
-        _handleIncomingMessage(parsedMessage);
-      }
+      _handleIncomingMessage(
+          deserializeDownstreamMessage(_jsonCodec.decode(data)));
     } catch (e) {
       Logger.instance.fatal(
         "Failed to parse server response",
