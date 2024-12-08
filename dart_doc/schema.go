@@ -10,15 +10,15 @@ import (
 func (self *DartDoc) GetSchema() (*objection_schema.Schema, error) {
 	schema := &objection_schema.Schema{}
 
-	objectNames, err := self.GetObjects()
+	dartObjects, err := self.GetObjects()
 	if err != nil {
 		return nil, err
 	}
 
-	slog.Debug("object names", "names", objectNames)
+	slog.Debug("object names", "names", dartObjects)
 
-	for _, objectName := range objectNames {
-		objectFields, err := self.GetClassFields(objectName)
+	for _, dartObject := range dartObjects {
+		objectFields, err := self.GetClassFields(dartObject.Name)
 		if err != nil {
 			return schema, err
 		}
@@ -41,7 +41,7 @@ func (self *DartDoc) GetSchema() (*objection_schema.Schema, error) {
 		}
 
 		object := objection_schema.ObjectDef{
-			Name:       objectName,
+			Name:       dartObject.Name,
 			Attributes: objection_schema.SchemaType{Kind: "struct", Properties: structFields},
 		}
 

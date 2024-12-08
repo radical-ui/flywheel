@@ -31,6 +31,7 @@ func main() {
 	rootCmd.AddCommand(genCommand)
 
 	var displayName string
+	var url string
 
 	previewCommand := &cobra.Command{
 		Use:   "preview [bundle identifier]",
@@ -45,6 +46,7 @@ func main() {
 				genFlutter: &flutter.Options{
 					DisplayName:      displayName,
 					BundleIdentifier: args[0],
+					Url:              url,
 				},
 				preview: true,
 			})
@@ -52,6 +54,7 @@ func main() {
 	}
 
 	previewCommand.Flags().StringVar(&displayName, "display-name", "", "The application display name")
+	previewCommand.Flags().StringVar(&url, "url", "ws://localhost:8000", "The objection server to connect to")
 
 	rootCmd.AddCommand(previewCommand)
 

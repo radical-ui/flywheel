@@ -48,7 +48,7 @@ func run(options runOptions) error {
 	var flutterInstance *flutter.Flutter
 
 	if options.genFlutter != nil {
-		f, err := flutter.NewFlutter(*options.genFlutter)
+		f, err := flutter.NewFlutter(dartLib, dartDoc, *options.genFlutter)
 		if err != nil {
 			return err
 		}

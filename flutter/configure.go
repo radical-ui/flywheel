@@ -12,69 +12,82 @@ import (
 )
 
 func (self *Flutter) Configure(dartLib *dart_lib.DartLib) error {
-	mapper, err := self.makePubspecUpdater()
-	if err != nil {
+	if err := mapFile(path.Join(self.dir, "pubspec.yaml"), self.makePubspecUpdater()); err != nil {
 		return err
 	}
-	mapFile(path.Join(self.dir, "pubspec.yaml"), mapper)
 
-	mapper, err = self.makeController()
+	mainDartGenerator, err := self.makeMainDartGenerator()
 	if err != nil {
 		return err
 	}
-	mapFile(path.Join(self.dir, "main.dart"), mapper)
+
+	if err := mapFile(path.Join(self.dir, "lib", "main.dart"), mainDartGenerator); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (self *Flutter) makeController() (func(string) string, error) {
+func (self *Flutter) makeMainDartGenerator() (func(string) string, error) {
 	boilerplate := `
-	import 'package:controller.dart';
-	import 'package:objects/objects.dart';
-	import 'package:flutter/material.dart';
-	%v
+		import 'package:controller/controller.dart';
+		import 'package:flutter/material.dart';
+		%v
 	
-	void main() {
-		runApp(const MyApp())
-	}
-	
-	class MyApp extents StatelessWidget {
-		const MyApp({super.key})
-
-		@override
-		Widget build(BuildContext context) {
-			return Controller(url: %v, builder: (json) {
-				%v
-			})
+		void main() {
+			runApp(const MyApp());
 		}
-	}`
+	
+		class MyApp extends StatelessWidget {
+			const MyApp({super.key});
 
-	importString := "import package:%v.dart;"
-	statementString := `if (kind == "%v") return %v(%v)`
+			@override
+			Widget build(BuildContext context) {
+				return Controller(url: '%v', builder: (anyObject) {
+					var name = anyObject.getName();
+					var attributes = anyObject.getAttributes();
+
+					%s
+
+					throw Exception('unknown object kind: $name');
+				});
+			}
+		}
+	`
+
+	importString := "import 'package:objects/%s';"
+	statementString := `if (name == "%s") { return %s(%s); }`
+
 	var imports []string
 	var statements []string
-	widgets, err := self.dartDoc.GetObjects()
+
+	dartObjects, err := self.dartDoc.GetObjects()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, widget := range widgets {
-		var attributes string
+	for _, widget := range dartObjects {
 		imports = append(imports, fmt.Sprintf(importString, widget.File))
-		fields, err := self.dartDoc.GetClassFields(widget.Name)
 
+		fields, err := self.dartDoc.GetClassFields(widget.Name)
 		if err != nil {
 			return nil, err
 		}
+
+		var attributes string
 		for _, attribute := range fields {
-			attributes = attributes + fmt.Sprintf("%v: json['attributes']['%v'],", attribute.Name, attribute.Name)
+			attributes = attributes + fmt.Sprintf("%s: attributes['%s'],", attribute.Name, attribute.Name)
 		}
+
 		statements = append(statements, fmt.Sprintf(statementString, widget.Name, widget.Name, attributes))
 	}
-	return func(_ string) string { return fmt.Sprintf(boilerplate, self.options.Url, statements) }, nil
+
+	return func(_ string) string {
+		return fmt.Sprintf(boilerplate, strings.Join(imports, "\n"), self.options.Url, strings.Join(statements, "\n"))
+	}, nil
 }
 
-func (self *Flutter) makePubspecUpdater() (func(string) string, error) {
+func (self *Flutter) makePubspecUpdater() func(string) string {
 	return func(text string) string {
 		newDependencies := strings.Join([]string{
 			"dependencies:",
@@ -85,7 +98,7 @@ func (self *Flutter) makePubspecUpdater() (func(string) string, error) {
 
 		currentDependenciesMatcher := regexp.MustCompile(`dependencies:[\S\s]*sdk: flutter`)
 		return currentDependenciesMatcher.ReplaceAllString(text, newDependencies)
-	}, nil
+	}
 }
 
 func pathDependency(name string, path string) string {
