@@ -7,6 +7,10 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
+  flutter:
+    sdk: flutter
+  uuid: ^4.5.1
+  web_socket_channel: ^3.0.1
 
 dev_dependencies:
   lints: ^5.0.0
