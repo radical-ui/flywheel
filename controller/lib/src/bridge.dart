@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:uuid/uuid.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'logger.dart';
 import 'any_object.dart';
@@ -16,7 +16,9 @@ class ObjectUpdate {
 }
 
 class Bridge {
-  WebSocketChannel? _webSocket;
+  /// NOTE: we are using WebSocket instead of WebSocketChannel because it allows the customization of the ping interval
+  /// Additionally, the websocketchannel sometimes doesn't send errors down correctly
+  WebSocket? _webSocket;
   bool _isStarted = false;
   int _retryCounter = 0;
 
@@ -86,7 +88,7 @@ class Bridge {
   void _sendMessage(UpstreamMessage message) {
     if (_webSocket != null) {
       final jsonMessage = _jsonCodec.encode(message.toJson());
-      _webSocket!.sink.add(jsonMessage);
+      _webSocket!.add(jsonMessage);
     } else {
       Logger.instance.error("webSocket not connected. Call start() first.");
     }
@@ -98,17 +100,11 @@ class Bridge {
     }
 
     Logger.instance.info("connecting to $url");
-    _webSocket = WebSocketChannel.connect(Uri.parse(url));
 
     try {
-      await _webSocket?.ready;
+      _webSocket = await WebSocket.connect(url);
     } catch (error) {
       var message = error.toString();
-
-      if (error is WebSocketChannelException) {
-        // hsp (probably a bug in dart)... if you don't cast to dynamic, it will just say "Instance of 'WebSocketException'"
-        message = (error.inner as dynamic).message;
-      }
 
       Logger.instance
           .warn("websocket error during initial connection: $message");
@@ -120,7 +116,8 @@ class Bridge {
     _retryCounter = 0;
     hasInteret.emit(true);
 
-    _webSocket!.stream.listen(
+    _webSocket?.pingInterval = Duration(seconds: 60);
+    _webSocket!.listen(
       (data) => _handleIncomingMessages(data),
       onDone: _queueRetry,
       onError: (error) {
