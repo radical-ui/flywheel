@@ -1,3 +1,4 @@
+import 'package:controller/src/logger.dart';
 import 'package:flutter/material.dart';
 
 import 'any_object.dart';
@@ -63,10 +64,17 @@ class _ChildrenWatcherState extends State<ChildrenWatcher> {
   Widget build(BuildContext context) {
     var widgetBuilder = ObjectBuilderState.of(context);
 
-    return widget.builder(
-      context,
-      anyObjectChildren.map((item) => widgetBuilder.builder(item)).toList(),
-    );
+    try {
+      return widget.builder(
+        context,
+        anyObjectChildren.map((item) => widgetBuilder.builder(item)).toList(),
+      );
+    } catch (error) {
+      Logger.instance.fatal(
+          "There is a mismatch between the server and client.",
+          "failed to build widget from json: $error");
+      return Container();
+    }
   }
 
   @override
