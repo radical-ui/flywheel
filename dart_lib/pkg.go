@@ -12,6 +12,7 @@ type DartLib struct {
 }
 
 func NewDartLib() (*DartLib, error) {
+	// if we have some objects in the current working directory, we will use those
 	bytes, _ := os.ReadFile("objects/pubspec.yaml")
 	if strings.HasPrefix(string(bytes), "name: objects\n") {
 		cwd, err := os.Getwd()

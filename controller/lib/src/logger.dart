@@ -40,20 +40,6 @@ class Logger {
     _diagnosticsUri = uri;
   }
 
-  List<String> _demangleStack(StackTrace stackTrace) {
-    final lines = stackTrace.toString().split('\n');
-    return lines.map((line) {
-      final parts =
-          line.trim().split(' ').where((part) => part.isNotEmpty).toList();
-      if (parts.length > 3) {
-        final library = parts[1];
-        final symbol = parts[3];
-        return '$library $symbol';
-      }
-      return line.trim();
-    }).toList();
-  }
-
   void _log(String level, String message) {
     final stackTrace = StackTrace.current;
     print("[$level] $message\n$stackTrace");
